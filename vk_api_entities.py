@@ -21,7 +21,6 @@ class EntityVK:
         return {
             'access_token': self._token,
             'v': '5.85',
-            'count': 1000,
         }
 
     @property
@@ -36,6 +35,7 @@ class EntityVK:
                 print(response['error']['error_msg'], '- ожидаем 1 сек.')
                 time.sleep(1)
             else:
+                time.sleep(0.34)
                 break
         return response
 
@@ -62,13 +62,19 @@ class GroupVK(EntityVK):
 
     @property
     def members(self):
+        members_count = self.info[0]['members_count']
         params = self._params
         params['group_id'] = self._id
         method = 'groups.getMembers'
-        response = super()._info_request(method, params)
-        if 'error' in response:
-            return response['error']
-        return response['response']['items']
+        members = []
+        for i in range(0, members_count, 1000):
+            params['offset'] = i
+            response = super()._info_request(method, params)
+            if 'error' in response:
+                return response['error']
+            members.extend(response['response']['items'])
+            print('.', end='')
+        return members
 
 
 class UserVK(EntityVK):
