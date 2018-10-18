@@ -43,6 +43,7 @@ class EntityVK:
 class GroupVK(EntityVK):
     """ Прототип экземпляров описывающих группы VK
         Экземпляр группы создается на основе идентификатора группы VK"""
+
     def __str__(self):
         name = self.info[0]['name']
         screen_name = self.info[0]['screen_name']
@@ -64,16 +65,45 @@ class GroupVK(EntityVK):
     def members(self):
         members_count = self.info[0]['members_count']
         params = self._params
-        params['group_id'] = self._id
-        method = 'groups.getMembers'
+        method = 'execute'
         members = []
-        for i in range(0, members_count, 1000):
-            params['offset'] = i
+
+        for i in range(0, members_count, 25000):
+            code = f"""
+                        var step=1000, R, offset = {i}, loop=0,
+                        out = {{ oid: {self._id}, ids:[], mass: {members_count}, offset: 0, next: 0 }};
+
+                        while( offset <= out.mass  &&  loop < 25) {{
+                            R = API.groups.getMembers({{ "group_id": out.oid, "sort": "id_asc", "offset": offset, "count": step}});
+                            if( !!R.items  &&  R.items.length > 0) {{
+                                out.ids.push( R.items);
+                                out.mass = R.count;
+
+                                out.loop = loop;
+
+                                out.offset = offset;
+                                offset = offset + step;
+                                out.next = offset;
+
+                                loop = loop + 1;
+                            }} else {{
+                                out.error = "Empty items";
+                                out.r = R;
+                                return out;
+                            }}
+                        }}
+
+                        return out;
+                    """
+            params['code'] = code
             response = super()._info_request(method, params)
+
             if 'error' in response:
                 return response['error']
-            members.extend(response['response']['items'])
-            print('.', end='')
+
+            for lst in response['response']['ids']:
+                members.extend(lst)
+
         return members
 
 

@@ -23,8 +23,10 @@ def do_crossing(user_):
     for group_id in user_croups:
         print('Осталось обработать записей:', counter)
         counter -= 1
+
         group = GroupVK(group_id)
         is_friends_not_in_group = set(group.members).isdisjoint(set(user_friends))
+
         if is_friends_not_in_group:
             result_[0].append(f'{group}')
             result_[1].append(group.info)
