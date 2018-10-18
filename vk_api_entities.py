@@ -63,17 +63,21 @@ class GroupVK(EntityVK):
 
     @property
     def members(self):
+        EXECUTE_STEP = 25000
         members_count = self.info[0]['members_count']
+        progress_counter = int(members_count / EXECUTE_STEP)
         params = self._params
         method = 'execute'
         members = []
 
-        for i in range(0, members_count, 25000):
+        print('■' * progress_counter, end='', flush=True)
+
+        for i in range(0, members_count, EXECUTE_STEP):
             code = f"""
                         var step=1000, R, offset = {i}, loop=0,
                         out = {{ oid: {self._id}, ids:[], mass: {members_count}, offset: 0, next: 0 }};
 
-                        while( offset <= out.mass  &&  loop < 25) {{
+                        while( offset <= out.mass  &&  loop < {EXECUTE_STEP / 1000}) {{
                             R = API.groups.getMembers({{ "group_id": out.oid, "sort": "id_asc", "offset": offset, "count": step}});
                             if( !!R.items  &&  R.items.length > 0) {{
                                 out.ids.push( R.items);
@@ -103,6 +107,10 @@ class GroupVK(EntityVK):
 
             for lst in response['response']['ids']:
                 members.extend(lst)
+
+            progress_counter = progress_counter - 1
+            print('', end='\r', flush=True)
+            print('\u25A0' * progress_counter, end='', flush=True)
 
         return members
 
