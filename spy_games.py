@@ -37,7 +37,9 @@ def set_timer(user_croups_):
 
     for group_id in user_croups_:
         group = GroupVK(group_id)
-        counter += group.info[0]['members_count']
+        group_info = group.info
+        if 'deactivated' not in group_info[0]:
+            counter += group_info[0]['members_count']
     return counter / execute_step
 
 
@@ -69,20 +71,24 @@ if __name__ == "__main__":
     user = UserVK(id_)
     user_croups = user.groups
 
-    proc = Process(target=reduce_timer, args=(user_croups,))
-    proc.start()
+    if 'error_code' in user_croups:
+        print(user_croups['error_msg'])
 
-    user_friends = user.friends
-    result = do_crossing(user_friends, user_croups)
+    else:
+        proc = Process(target=reduce_timer, args=(user_croups,))
+        proc.start()
 
-    proc.join()
+        user_friends = user.friends
+        result = do_crossing(user_friends, user_croups)
 
-    print('\nПользователь', user)
-    print('Список групп в ВК в которых состоит пользователь, но не состоит никто из его друзей:')
-    for item in result[0]:
-        print(item)
+        proc.join()
 
-    path_to_save = os.path.join(current_dir, f'{id_}-groups.json')
-    with open(path_to_save, "w", encoding="utf-8") as file:
-        json.dump(result[1], file, indent=2, separators=(',', ': '), ensure_ascii=False)
-        print(f'Данные сохранены в {path_to_save}')
+        print('\nПользователь', user)
+        print('Список групп в ВК в которых состоит пользователь, но не состоит никто из его друзей:')
+        for item in result[0]:
+            print(item)
+
+        path_to_save = os.path.join(current_dir, f'{id_}-groups.json')
+        with open(path_to_save, "w", encoding="utf-8") as file:
+            json.dump(result[1], file, indent=2, separators=(',', ': '), ensure_ascii=False)
+            print(f'Данные сохранены в {path_to_save}')

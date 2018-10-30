@@ -64,7 +64,8 @@ class GroupVK(EntityVK):
     @property
     def members(self):
         EXECUTE_STEP = 25000
-        members_count = self.info[0]['members_count']
+        self_info = self.info
+        members_count = self_info[0]['members_count'] if 'deactivated' not in self_info[0] else 0
         params = self._params
         method = 'execute'
         members = []
