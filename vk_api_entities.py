@@ -32,7 +32,7 @@ class EntityVK:
         while True:
             response = requests.get(f'https://api.vk.com/method/{method}', params).json()
             if 'error' in response and response['error']['error_code'] == 6:
-                print(response['error']['error_msg'], '- ожидаем 1 сек.')
+                # print(response['error']['error_msg'], '- ожидаем 1 сек.')
                 time.sleep(1)
             else:
                 time.sleep(0.34)
@@ -65,12 +65,9 @@ class GroupVK(EntityVK):
     def members(self):
         EXECUTE_STEP = 25000
         members_count = self.info[0]['members_count']
-        progress_counter = int(members_count / EXECUTE_STEP)
         params = self._params
         method = 'execute'
         members = []
-
-        print('■' * progress_counter, end='', flush=True)
 
         for i in range(0, members_count, EXECUTE_STEP):
             code = f"""
@@ -107,10 +104,6 @@ class GroupVK(EntityVK):
 
             for lst in response['response']['ids']:
                 members.extend(lst)
-
-            progress_counter = progress_counter - 1
-            print('', end='\r', flush=True)
-            print('\u25A0' * progress_counter, end='', flush=True)
 
         return members
 
